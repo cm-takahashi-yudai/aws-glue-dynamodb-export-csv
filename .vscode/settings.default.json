@@ -1,0 +1,21 @@
+{
+    "python.pythonPath": ".venv/bin/python",
+    "terminal.integrated.env.windows": {
+        "PROJECT_NAME": "aws-glue-dynamodb-export-csv-{my-name}",
+        "STAGE_NAME": "dev",
+        "AWS_PROFILE": "",
+        "PIPENV_VERBOSITY": "-1"
+    },
+    "terminal.integrated.env.osx": {
+        "PROJECT_NAME": "aws-glue-dynamodb-export-csv-{my-name}",
+        "STAGE_NAME": "dev",
+        "AWS_PROFILE": "",
+        "PIPENV_VERBOSITY": "-1"
+    },
+    "terminal.integrated.env.linux": {
+        "PROJECT_NAME": "aws-glue-dynamodb-export-csv-{my-name}",
+        "STAGE_NAME": "dev",
+        "AWS_PROFILE": "",
+        "PIPENV_VERBOSITY": "-1"
+    }
+}

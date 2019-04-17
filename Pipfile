@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+pylint = "*"
+flake8 = "*"
+autopep8 = "*"
+pydocstyle = "*"
+pytest = "*"
+awscli = "*"
+aws-sam-cli = "*"
+boto3 = "*"
+
+[packages]
+
+[requires]
+python_version = "3.7"
