@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: aws-glue-dynamodb-export-csv-glue
+Parameters:
+  ProjectName:
+    Type: String
+    Description: Project Name
+  StageName:
+    Type: String
+    AllowedValues:
+      - prod
+      - stage
+      - dev
+    Description: Stage Name
+Resources:
+  GlueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${ProjectName}-${StageName}-glue-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Sub: ${ProjectName}-${StageName}-dynamodb-permission
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: '*'
+        - PolicyName:
+            Fn::Sub: ${ProjectName}-${StageName}-s3-permission
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource: '*'
+  GlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      DatabaseInput:
+        Name:
+          Fn::Sub: ${ProjectName}-${StageName}-glue-database
+      CatalogId:
+        Ref: AWS::AccountId
+  GlueScriptS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: ${ProjectName}-${StageName}-glue-script
+  # DynamoDBTargetsがCloudFormationで未対応なのでCLIでデプロイ
+  # GlueCrawler:
+  #   Type: AWS::Glue::Crawler
+  #   Properties:
+  #     Name:
+  #       Fn::Sub: ${ProjectName}-${StageName}-glue-crawler
+  #     Role:
+  #       Fn::GetAtt: GlueRole.Arn
+  #     DatabaseName:
+  #       Ref: GlueDatabase
+  #     Targets:
+  #       DynamoDBTargets:
+  #         - Path:
+  #             Fn::Sub: ${ProjectName}-${StageName}-target
+  CreateCsvGlueJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name:
+        Fn::Sub: ${ProjectName}-${StageName}-create-csv-glue-job
+      Command:
+        Name: glueetl
+        ScriptLocation:
+          Fn::Sub: s3://${ProjectName}-${StageName}-glue-script/create_csv.py
+      DefaultArguments:
+        "--job-bookmark-option": "job-bookmark-enable"
+      AllocatedCapacity: 5
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+      Role:
+        Ref: GlueRole
+  JoinCsvGlueJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name:
+        Fn::Sub: ${ProjectName}-${StageName}-join-csv-glue-job
+      Command:
+        Name: pythonshell
+        ScriptLocation:
+          Fn::Sub: s3://${ProjectName}-${StageName}-glue-script/join_csv.py
+      DefaultArguments:
+        "--job-bookmark-option": "job-bookmark-enable"
+      ExecutionProperty:
+        MaxConcurrentRuns: 1
+      MaxRetries: 0
+      Role:
+        Ref: GlueRole

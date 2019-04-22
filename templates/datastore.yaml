@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: aws-glue-dynamodb-export-csv-datastore
+Parameters:
+  ProjectName:
+    Type: String
+    Description: Project Name
+  StageName:
+    Type: String
+    AllowedValues:
+      - prod
+      - stage
+      - dev
+    Description: Stage Name
+Resources:
+  ArticleTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${ProjectName}-${StageName}-target
+      AttributeDefinitions:
+        - AttributeName: sample_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sample_id
+          KeyType: HASH
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: ${ProjectName}-${StageName}-result
