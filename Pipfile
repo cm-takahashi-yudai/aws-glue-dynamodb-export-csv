@@ -15,6 +15,7 @@ aws-sam-cli = "*"
 boto3 = "*"
 
 [packages]
+pandas = "*"
 
 [requires]
 python_version = "3.7"

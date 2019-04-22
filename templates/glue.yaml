@@ -28,6 +28,15 @@ Resources:
               - sts:AssumeRole
       Policies:
         - PolicyName:
+            Fn::Sub: ${ProjectName}-${StageName}-glue-permission
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - glue:*
+                Resource: '*'
+        - PolicyName:
             Fn::Sub: ${ProjectName}-${StageName}-dynamodb-permission
           PolicyDocument:
             Version: "2012-10-17"
@@ -45,6 +54,39 @@ Resources:
                 Action:
                   - s3:*
                 Resource: '*'
+        - PolicyName:
+            Fn::Sub: ${ProjectName}-${StageName}-logs-permission
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: '*'
+  StepFunctionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${ProjectName}-${StageName}-step-functions-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Sub: ${ProjectName}-${StageName}-glue-permission
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - glue:*
+                Resource: '*'
   GlueDatabase:
     Type: AWS::Glue::Database
     Properties:
@@ -53,25 +95,38 @@ Resources:
           Fn::Sub: ${ProjectName}-${StageName}-glue-database
       CatalogId:
         Ref: AWS::AccountId
+  GlueTable:
+    DependsOn: GlueDatabase
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Ref: AWS::AccountId
+      DatabaseName:
+        Ref: GlueDatabase
+      TableInput:
+        Name:
+          Fn::Sub: ${ProjectName}-${StageName}-glue-table
+        Parameters: {
+          "classification": "dynamodb"
+        }
+        PartitionKeys:
+          - Name: sample_id
+            Type: string
+        StorageDescriptor:
+          Columns:
+            - Name: sample_col_1
+              Type: string
+            - Name: sample_col_2
+              Type: string
+            - Name: sample_col_3
+              Type: bigint
+          Location:
+            Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-${StageName}-target
   GlueScriptS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName:
         Fn::Sub: ${ProjectName}-${StageName}-glue-script
-  # DynamoDBTargetsがCloudFormationで未対応なのでCLIでデプロイ
-  # GlueCrawler:
-  #   Type: AWS::Glue::Crawler
-  #   Properties:
-  #     Name:
-  #       Fn::Sub: ${ProjectName}-${StageName}-glue-crawler
-  #     Role:
-  #       Fn::GetAtt: GlueRole.Arn
-  #     DatabaseName:
-  #       Ref: GlueDatabase
-  #     Targets:
-  #       DynamoDBTargets:
-  #         - Path:
-  #             Fn::Sub: ${ProjectName}-${StageName}-target
   CreateCsvGlueJob:
     Type: AWS::Glue::Job
     Properties:
@@ -82,7 +137,7 @@ Resources:
         ScriptLocation:
           Fn::Sub: s3://${ProjectName}-${StageName}-glue-script/create_csv.py
       DefaultArguments:
-        "--job-bookmark-option": "job-bookmark-enable"
+        "--job-bookmark-option": "job-bookmark-disable"
       AllocatedCapacity: 5
       ExecutionProperty:
         MaxConcurrentRuns: 1
@@ -99,9 +154,27 @@ Resources:
         ScriptLocation:
           Fn::Sub: s3://${ProjectName}-${StageName}-glue-script/join_csv.py
       DefaultArguments:
-        "--job-bookmark-option": "job-bookmark-enable"
+        "--job-bookmark-option": "job-bookmark-disable"
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
       Role:
         Ref: GlueRole
+  CreateCsvStepFunctions:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName:
+        Fn::Sub: ${ProjectName}-${StageName}-create-csv-step-functions
+      DefinitionString: |-
+        {
+          "StartAt": "HelloWorld",
+          "States": {
+            "HelloWorld": {
+              "Type": "Pass",
+              "Result": "Hello World!",
+              "End": true
+            }
+          }
+        }
+      RoleArn:
+        Fn::GetAtt: StepFunctionsRole.Arn

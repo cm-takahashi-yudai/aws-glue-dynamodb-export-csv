@@ -23,22 +23,15 @@ deploy-glue:
 		--parameter-overrides ProjectName=${PROJECT_NAME} StageName=${STAGE_NAME} \
 		--no-fail-on-empty-changeset \
 		--capabilities CAPABILITY_NAMED_IAM
-
-deploy-glue-crawler:
-	@aws glue create-crawler \
-		--name ${PROJECT_NAME}-${STAGE_NAME}-glue-crawler \
-		--role ${PROJECT_NAME}-${STAGE_NAME}-glue-role \
-		--database-name ${PROJECT_NAME}-${STAGE_NAME}-glue-database \
-		--targets '{"DynamoDBTargets": [{"Path": "${PROJECT_NAME}-${STAGE_NAME}-target"}]}'
-
-deploy-step-functions:
-	# Step Functions
+	@aws s3 sync \
+		--exact-timestamps \
+		--delete \
+		src/glue_jobs \
+		s3://${PROJECT_NAME}-${STAGE_NAME}-glue-script
 
 deploy-all:
 	@make deploy-datastore
 	@make deploy-glue
-	@make deploy-glue-crawler
-	@make deploy-step-functions
 
 delete-stack-all:
 	@aws s3 rm s3://${PROJECT_NAME}-${STAGE_NAME}-glue-script --recursive
