@@ -13,9 +13,11 @@ pytest = "*"
 awscli = "*"
 aws-sam-cli = "*"
 boto3 = "*"
+pyspark = "*"
+pandas = "*"
+fake-awsglue = "*"
 
 [packages]
-pandas = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "2.7"
