@@ -18,15 +18,16 @@ Resources:
       TableName:
         Fn::Sub: ${ProjectName}-${StageName}-target
       AttributeDefinitions:
+        - AttributeName: create_date
+          AttributeType: S
         - AttributeName: sample_id
           AttributeType: S
       KeySchema:
-        - AttributeName: sample_id
+        - AttributeName: create_date
           KeyType: HASH
-      BillingMode: PROVISIONED
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+        - AttributeName: sample_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
   ArtifactBucket:
     Type: AWS::S3::Bucket
     Properties:

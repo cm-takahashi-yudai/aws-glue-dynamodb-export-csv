@@ -42,3 +42,6 @@ delete-stack-all:
 	@aws s3 rm s3://${PROJECT_NAME}-${STAGE_NAME}-result --recursive
 	@aws cloudformation delete-stack --stack-name ${PROJECT_NAME}-${STAGE_NAME}-datastore-stack
 	@aws cloudformation delete-stack --stack-name ${PROJECT_NAME}-${STAGE_NAME}-glue-stack
+
+dynamodb-put-sample-items:
+	@python src/dynamodb/put_sample_items.py
