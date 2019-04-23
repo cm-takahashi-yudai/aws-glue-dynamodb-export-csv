@@ -28,6 +28,10 @@ deploy-glue:
 		--delete \
 		src/glue_jobs \
 		s3://${PROJECT_NAME}-${STAGE_NAME}-glue-script
+	@aws glue start-trigger \
+		--name ${PROJECT_NAME}-${STAGE_NAME}-create-csv-glue-trigger
+	@aws glue start-trigger \
+		--name ${PROJECT_NAME}-${STAGE_NAME}-join-csv-glue-trigger
 
 deploy-all:
 	@make deploy-datastore
