@@ -86,16 +86,18 @@ Resources:
           "classification": "dynamodb"
         }
         PartitionKeys:
-          - Name: sample_id
+          - Name: create_date
             Type: string
         StorageDescriptor:
           Columns:
-            - Name: sample_col_1
+            - Name: sample_id
               Type: string
-            - Name: sample_col_2
+            - Name: sample_col_a
               Type: string
-            - Name: sample_col_3
-              Type: bigint
+            - Name: sample_col_b
+              Type: string
+            - Name: sample_col_c
+              Type: string
           Location:
             Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-${StageName}-target
   GlueScriptS3Bucket:

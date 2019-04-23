@@ -26,10 +26,11 @@ datasource = glueContext.create_dynamic_frame.from_catalog(
 applymapping = ApplyMapping.apply(
     frame=datasource,
     mappings=[
-        ("sample_col_1", "string", "sample_col_1", "string"),
-        ("sample_col_2", "string", "sample_col_2", "string"),
-        ("sample_col_3", "long", "sample_col_3", "long"),
-        ("sample_id", "string", "sample_id", "string")
+        ("create_date", "string", "create_date", "string"),
+        ("sample_id", "string", "sample_id", "string"),
+        ("sample_col_a", "string", "sample_col_a", "string"),
+        ("sample_col_b", "string", "sample_col_b", "string"),
+        ("sample_col_c", "string", "sample_col_c", "string")
     ],
     transformation_ctx="applymapping"
 )
