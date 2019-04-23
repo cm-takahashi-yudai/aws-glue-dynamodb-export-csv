@@ -13,7 +13,7 @@ dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(TABLE_NAME)
 
 
-def main() -> None:
+def main():
     create_dates = list()
     create_dates.append((datetime.now() - timedelta(days=2)).strftime('%Y-%m-%d'))
     create_dates.append((datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d'))

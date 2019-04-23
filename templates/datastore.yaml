@@ -6,10 +6,6 @@ Parameters:
     Description: Project Name
   StageName:
     Type: String
-    AllowedValues:
-      - prod
-      - stage
-      - dev
     Description: Stage Name
 Resources:
   ArticleTable:

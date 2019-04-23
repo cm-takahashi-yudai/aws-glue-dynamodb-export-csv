@@ -26,19 +26,17 @@ deploy-glue:
 	@aws s3 sync \
 		--exact-timestamps \
 		--delete \
-		src/glue_jobs \
-		s3://${PROJECT_NAME}-${STAGE_NAME}-glue-script
+		src/glue \
+		s3://${PROJECT_NAME}-${STAGE_NAME}-glue-jobs
 	@aws glue start-trigger \
 		--name ${PROJECT_NAME}-${STAGE_NAME}-create-csv-glue-trigger
-	@aws glue start-trigger \
-		--name ${PROJECT_NAME}-${STAGE_NAME}-join-csv-glue-trigger
 
 deploy-all:
 	@make deploy-datastore
 	@make deploy-glue
 
 delete-stack-all:
-	@aws s3 rm s3://${PROJECT_NAME}-${STAGE_NAME}-glue-script --recursive
+	@aws s3 rm s3://${PROJECT_NAME}-${STAGE_NAME}-glue-jobs --recursive
 	@aws s3 rm s3://${PROJECT_NAME}-${STAGE_NAME}-result --recursive
 	@aws cloudformation delete-stack --stack-name ${PROJECT_NAME}-${STAGE_NAME}-datastore-stack
 	@aws cloudformation delete-stack --stack-name ${PROJECT_NAME}-${STAGE_NAME}-glue-stack

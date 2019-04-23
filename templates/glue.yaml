@@ -6,10 +6,6 @@ Parameters:
     Description: Project Name
   StageName:
     Type: String
-    AllowedValues:
-      - prod
-      - stage
-      - dev
     Description: Stage Name
 Resources:
   GlueRole:
@@ -63,76 +59,26 @@ Resources:
                 Action:
                   - logs:*
                 Resource: '*'
-  GlueDatabase:
-    Type: AWS::Glue::Database
-    Properties:
-      DatabaseInput:
-        Name:
-          Fn::Sub: ${ProjectName}-${StageName}-glue-database
-      CatalogId:
-        Ref: AWS::AccountId
-  GlueTable:
-    DependsOn: GlueDatabase
-    Type: AWS::Glue::Table
-    Properties:
-      CatalogId:
-        Ref: AWS::AccountId
-      DatabaseName:
-        Ref: GlueDatabase
-      TableInput:
-        Name:
-          Fn::Sub: ${ProjectName}-${StageName}-glue-table
-        Parameters: {
-          "classification": "dynamodb"
-        }
-        PartitionKeys:
-          - Name: create_date
-            Type: string
-        StorageDescriptor:
-          Columns:
-            - Name: sample_id
-              Type: int
-            - Name: sample_col_a
-              Type: string
-            - Name: sample_col_b
-              Type: string
-            - Name: sample_col_c
-              Type: string
-          Location:
-            Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-${StageName}-target
-  GlueScriptS3Bucket:
+  GlueJobsS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName:
-        Fn::Sub: ${ProjectName}-${StageName}-glue-script
+        Fn::Sub: ${ProjectName}-${StageName}-glue-jobs
   CreateCsvGlueJob:
     Type: AWS::Glue::Job
     Properties:
       Name:
         Fn::Sub: ${ProjectName}-${StageName}-create-csv-glue-job
       Command:
-        Name: glueetl
-        ScriptLocation:
-          Fn::Sub: s3://${ProjectName}-${StageName}-glue-script/create_csv.py
-      DefaultArguments:
-        "--job-bookmark-option": "job-bookmark-disable"
-      AllocatedCapacity: 5
-      ExecutionProperty:
-        MaxConcurrentRuns: 1
-      MaxRetries: 0
-      Role:
-        Ref: GlueRole
-  JoinCsvGlueJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Name:
-        Fn::Sub: ${ProjectName}-${StageName}-join-csv-glue-job
-      Command:
         Name: pythonshell
         ScriptLocation:
-          Fn::Sub: s3://${ProjectName}-${StageName}-glue-script/join_csv.py
+          Fn::Sub: s3://${ProjectName}-${StageName}-glue-jobs/create_csv.py
       DefaultArguments:
         "--job-bookmark-option": "job-bookmark-disable"
+        "--TABLE_NAME":
+          Fn::Sub: ${ProjectName}-${StageName}-target
+        "--BUCKET_NAME":
+          Fn::Sub: ${ProjectName}-${StageName}-result
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 0
@@ -161,20 +107,3 @@ Resources:
             Ref: CreateCsvGlueJob
           Arguments:
             "--job-bookmark-option": "job-bookmark-disable"
-  JoinCsvGlueTrigger:
-    Type: AWS::Glue::Trigger
-    Properties:
-      Name:
-        Fn::Sub: ${ProjectName}-${StageName}-join-csv-glue-trigger
-      Type: CONDITIONAL
-      Actions:
-        - JobName:
-            Ref: JoinCsvGlueJob
-          Arguments:
-            "--job-bookmark-option": "job-bookmark-disable"
-      Predicate:
-        Conditions:
-          - LogicalOperator: EQUALS
-            JobName:
-              Ref: CreateCsvGlueJob
-            State: SUCCEEDED
