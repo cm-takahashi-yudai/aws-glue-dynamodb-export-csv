@@ -84,17 +84,6 @@ Resources:
       MaxRetries: 0
       Role:
         Ref: GlueRole
-  CreateCsvOnDemandGlueTrigger:
-    Type: AWS::Glue::Trigger
-    Properties:
-      Name:
-        Fn::Sub: ${ProjectName}-${StageName}-create-csv-on-demand-glue-trigger
-      Type: ON_DEMAND
-      Actions:
-        - JobName:
-            Ref: CreateCsvGlueJob
-          Arguments:
-            "--job-bookmark-option": "job-bookmark-disable"
   CreateCsvGlueTrigger:
     Type: AWS::Glue::Trigger
     Properties:
