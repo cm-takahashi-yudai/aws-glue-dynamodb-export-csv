@@ -27,7 +27,7 @@ applymapping = ApplyMapping.apply(
     frame=datasource,
     mappings=[
         ("create_date", "string", "create_date", "string"),
-        ("sample_id", "string", "sample_id", "string"),
+        ("sample_id", "int", "sample_id", "int"),
         ("sample_col_a", "string", "sample_col_a", "string"),
         ("sample_col_b", "string", "sample_col_b", "string"),
         ("sample_col_c", "string", "sample_col_c", "string")

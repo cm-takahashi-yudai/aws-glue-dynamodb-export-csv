@@ -21,7 +21,7 @@ Resources:
         - AttributeName: create_date
           AttributeType: S
         - AttributeName: sample_id
-          AttributeType: S
+          AttributeType: N
       KeySchema:
         - AttributeName: create_date
           KeyType: HASH

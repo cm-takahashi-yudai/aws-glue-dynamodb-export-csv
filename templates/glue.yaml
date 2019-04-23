@@ -91,7 +91,7 @@ Resources:
         StorageDescriptor:
           Columns:
             - Name: sample_id
-              Type: string
+              Type: int
             - Name: sample_col_a
               Type: string
             - Name: sample_col_b
