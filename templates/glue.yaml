@@ -63,30 +63,6 @@ Resources:
                 Action:
                   - logs:*
                 Resource: '*'
-  StepFunctionsRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName:
-        Fn::Sub: ${ProjectName}-${StageName}-step-functions-role
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - states.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Policies:
-        - PolicyName:
-            Fn::Sub: ${ProjectName}-${StageName}-glue-permission
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - glue:*
-                Resource: '*'
   GlueDatabase:
     Type: AWS::Glue::Database
     Properties:
@@ -160,21 +136,43 @@ Resources:
       MaxRetries: 0
       Role:
         Ref: GlueRole
-  CreateCsvStepFunctions:
-    Type: AWS::StepFunctions::StateMachine
+  CreateCsvOnDemandGlueTrigger:
+    Type: AWS::Glue::Trigger
     Properties:
-      StateMachineName:
-        Fn::Sub: ${ProjectName}-${StageName}-create-csv-step-functions
-      DefinitionString: |-
-        {
-          "StartAt": "HelloWorld",
-          "States": {
-            "HelloWorld": {
-              "Type": "Pass",
-              "Result": "Hello World!",
-              "End": true
-            }
-          }
-        }
-      RoleArn:
-        Fn::GetAtt: StepFunctionsRole.Arn
+      Name:
+        Fn::Sub: ${ProjectName}-${StageName}-create-csv-on-demand-glue-trigger
+      Type: ON_DEMAND
+      Actions:
+        - JobName:
+            Ref: CreateCsvGlueJob
+          Arguments:
+            "--job-bookmark-option": "job-bookmark-disable"
+  CreateCsvGlueTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      Name:
+        Fn::Sub: ${ProjectName}-${StageName}-create-csv-glue-trigger
+      Type: SCHEDULED
+      Schedule: cron(0 16 * * ? *)
+      Actions:
+        - JobName:
+            Ref: CreateCsvGlueJob
+          Arguments:
+            "--job-bookmark-option": "job-bookmark-disable"
+  JoinCsvGlueTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      Name:
+        Fn::Sub: ${ProjectName}-${StageName}-join-csv-glue-trigger
+      Type: CONDITIONAL
+      Actions:
+        - JobName:
+            Ref: JoinCsvGlueJob
+          Arguments:
+            "--job-bookmark-option": "job-bookmark-disable"
+      Predicate:
+        Conditions:
+          - LogicalOperator: EQUALS
+            JobName:
+              Ref: CreateCsvGlueJob
+            State: SUCCEEDED
